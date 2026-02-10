@@ -6,6 +6,7 @@ import TransactionsPage from '@/pages/TransactionsPage';
 import DebtsPage from '@/pages/DebtsPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import ProfilePage from '@/pages/ProfilePage';
+import { AddTransactionSheet } from '@/components/AddTransactionSheet';
 
 type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'profile';
 
@@ -19,21 +20,23 @@ const tabs = [
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [showAdd, setShowAdd] = useState(false);
+
+  const navigateTo = (tab: Tab) => setActiveTab(tab);
 
   const renderPage = () => {
     switch (activeTab) {
-      case 'home': return <HomePage />;
+      case 'home': return <HomePage onNavigate={navigateTo} />;
       case 'transactions': return <TransactionsPage />;
       case 'debts': return <DebtsPage />;
       case 'profile': return <ProfilePage />;
-      default: return <HomePage />;
+      default: return <HomePage onNavigate={navigateTo} />;
     }
   };
 
   const handleTabClick = (tab: Tab) => {
     if (tab === 'add') {
-      // FAB in homepage handles this
-      setActiveTab('home');
+      setShowAdd(true);
       return;
     }
     setActiveTab(tab);
@@ -41,7 +44,6 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Page Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -87,9 +89,10 @@ const MainLayout = () => {
             );
           })}
         </div>
-        {/* Safe area */}
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
+
+      <AddTransactionSheet open={showAdd} onOpenChange={setShowAdd} />
     </div>
   );
 };
