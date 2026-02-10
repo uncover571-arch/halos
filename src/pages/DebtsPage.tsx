@@ -8,6 +8,7 @@ import { demoDebts, formatCurrency } from '@/data/demo-data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
@@ -15,6 +16,12 @@ const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 const DebtsPage = () => {
   const [tab, setTab] = useState<'lent' | 'borrowed'>('lent');
   const [showAdd, setShowAdd] = useState(false);
+  const [debtType, setDebtType] = useState<'lent' | 'borrowed'>('lent');
+  const [personName, setPersonName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [debtAmount, setDebtAmount] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [debtDesc, setDebtDesc] = useState('');
 
   const lent = demoDebts.filter(d => d.isLent);
   const borrowed = demoDebts.filter(d => !d.isLent);
@@ -26,7 +33,19 @@ const DebtsPage = () => {
   const statusConfig = {
     active: { label: 'Aktiv', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
     paid: { label: "To'langan", color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
-    overdue: { label: 'Muddati o\'tgan', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+    overdue: { label: "Muddati o'tgan", color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  };
+
+  const resetForm = () => {
+    setPersonName(''); setPhoneNumber(''); setDebtAmount(''); setDueDate(''); setDebtDesc('');
+  };
+
+  const handleSaveDebt = () => {
+    if (!personName.trim()) { toast.error('Shaxs ismini kiriting!'); return; }
+    if (!debtAmount || Number(debtAmount) <= 0) { toast.error('Summani kiriting!'); return; }
+    toast.success(`Qarz qo'shildi: ${personName} - ${Number(debtAmount).toLocaleString()} UZS`);
+    setShowAdd(false);
+    resetForm();
   };
 
   return (
@@ -110,7 +129,7 @@ const DebtsPage = () => {
       {/* FAB */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => setShowAdd(true)}
+        onClick={() => { resetForm(); setShowAdd(true); }}
         className="fixed bottom-24 right-6 w-14 h-14 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center z-50"
       >
         <Plus size={28} />
@@ -122,15 +141,25 @@ const DebtsPage = () => {
           <SheetHeader><SheetTitle>Qarz qo'shish</SheetTitle></SheetHeader>
           <div className="space-y-4 py-4">
             <div className="flex gap-2 p-1 bg-muted rounded-xl">
-              <button className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-card shadow">Men berdim</button>
-              <button className="flex-1 py-2.5 rounded-lg text-sm font-medium text-muted-foreground">Men oldim</button>
+              <button
+                onClick={() => setDebtType('lent')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${debtType === 'lent' ? 'bg-emerald-500 text-white shadow' : 'text-muted-foreground'}`}
+              >
+                Men berdim
+              </button>
+              <button
+                onClick={() => setDebtType('borrowed')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${debtType === 'borrowed' ? 'bg-destructive text-white shadow' : 'text-muted-foreground'}`}
+              >
+                Men oldim
+              </button>
             </div>
-            <div><label className="text-sm font-medium mb-1.5 block">Shaxs ismi</label><Input placeholder="Ism..." /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Telefon raqami</label><Input placeholder="+998..." /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Summa (UZS)</label><Input type="number" placeholder="0" className="text-xl font-bold h-12" /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">To'lov muddati</label><Input type="date" /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Tavsif</label><Textarea placeholder="Izoh..." rows={2} /></div>
-            <Button onClick={() => setShowAdd(false)} className="w-full h-12 text-base font-semibold gradient-primary border-0 text-white">Saqlash</Button>
+            <div><label className="text-sm font-medium mb-1.5 block">Shaxs ismi</label><Input placeholder="Ism..." value={personName} onChange={e => setPersonName(e.target.value)} /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">Telefon raqami</label><Input placeholder="+998..." value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">Summa (UZS)</label><Input type="number" placeholder="0" className="text-xl font-bold h-12" value={debtAmount} onChange={e => setDebtAmount(e.target.value)} /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">To'lov muddati</label><Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">Tavsif</label><Textarea placeholder="Izoh..." rows={2} value={debtDesc} onChange={e => setDebtDesc(e.target.value)} /></div>
+            <Button onClick={handleSaveDebt} className="w-full h-12 text-base font-semibold gradient-primary border-0 text-white">Saqlash</Button>
           </div>
         </SheetContent>
       </Sheet>

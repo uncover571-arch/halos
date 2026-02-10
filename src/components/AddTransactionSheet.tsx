@@ -1,24 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/models';
+import { toast } from 'sonner';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultType?: 'income' | 'expense';
 }
 
-export const AddTransactionSheet = ({ open, onOpenChange }: Props) => {
+export const AddTransactionSheet = ({ open, onOpenChange, defaultType }: Props) => {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
+  useEffect(() => {
+    if (open && defaultType) {
+      setType(defaultType);
+      setCategory('');
+    }
+  }, [open, defaultType]);
+
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const handleSave = () => {
+    if (!amount || Number(amount) <= 0) { toast.error('Summani kiriting!'); return; }
+    if (!category) { toast.error('Kategoriya tanlang!'); return; }
+    toast.success(`${type === 'income' ? 'Kirim' : 'Chiqim'} qo'shildi: ${Number(amount).toLocaleString()} UZS`);
     onOpenChange(false);
     setAmount('');
     setCategory('');

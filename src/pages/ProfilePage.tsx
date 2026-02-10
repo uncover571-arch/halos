@@ -1,25 +1,50 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { demoUser } from '@/data/demo-data';
-import { Moon, Sun, Globe, DollarSign, Bell, Download, Upload, Trash2, Info, Shield, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { Moon, Globe, DollarSign, Bell, Download, Upload, Trash2, Info, Shield, HelpCircle, LogOut, ChevronRight, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
-const SettingRow = ({ icon: Icon, label, value, action }: { icon: any; label: string; value?: string; action?: React.ReactNode }) => (
-  <div className="flex items-center justify-between py-3">
+const SettingRow = ({ icon: Icon, label, value, action, onClick }: { icon: any; label: string; value?: string; action?: React.ReactNode; onClick?: () => void }) => (
+  <div className={`flex items-center justify-between py-3 ${onClick ? 'cursor-pointer active:bg-accent/50 -mx-1 px-1 rounded-lg transition-colors' : ''}`} onClick={onClick}>
     <div className="flex items-center gap-3">
       <Icon size={18} className="text-muted-foreground" />
       <span className="text-sm">{label}</span>
     </div>
-    {value && <span className="text-sm text-muted-foreground">{value}</span>}
+    {value && !action && <div className="flex items-center gap-1"><span className="text-sm text-muted-foreground">{value}</span><ChevronRight size={16} className="text-muted-foreground" /></div>}
     {action}
   </div>
 );
 
+const languages = [
+  { code: 'uz' as const, label: "O'zbekcha", flag: '🇺🇿' },
+  { code: 'ru' as const, label: 'Русский', flag: '🇷🇺' },
+  { code: 'en' as const, label: 'English', flag: '🇬🇧' },
+];
+
+const currencies = [
+  { code: 'UZS' as const, label: "O'zbek so'mi", symbol: "so'm" },
+  { code: 'USD' as const, label: 'AQSH dollari', symbol: '$' },
+  { code: 'EUR' as const, label: 'Yevro', symbol: '€' },
+  { code: 'RUB' as const, label: 'Rossiya rubli', symbol: '₽' },
+];
+
 const ProfilePage = () => {
+  const { theme, setTheme, language, setLanguage, currency, setCurrency, notifications, setNotifications } = useAppSettings();
+  const [langOpen, setLangOpen] = useState(false);
+  const [currOpen, setCurrOpen] = useState(false);
+
+  const isDark = theme === 'dark';
+  const currentLang = languages.find(l => l.code === language);
+  const currentCurr = currencies.find(c => c.code === currency);
+
   return (
     <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
@@ -32,7 +57,7 @@ const ProfilePage = () => {
           </div>
           <h2 className="font-bold text-lg">{demoUser.firstName} {demoUser.lastName}</h2>
           <p className="text-sm text-muted-foreground">@{demoUser.username}</p>
-          <Button variant="outline" size="sm" className="mt-2">Tahrirlash</Button>
+          <Button variant="outline" size="sm" className="mt-2" onClick={() => toast.info('Profil tahrirlash tez kunda!')}>Tahrirlash</Button>
         </motion.div>
 
         {/* Telegram */}
@@ -45,7 +70,7 @@ const ProfilePage = () => {
                   <p className="font-medium text-sm">Telegram</p>
                   <p className="text-xs text-muted-foreground">Ulanmagan</p>
                 </div>
-                <Button size="sm" variant="outline">Ulash</Button>
+                <Button size="sm" variant="outline" onClick={() => toast.info('Telegram integratsiya tez kunda!')}>Ulash</Button>
               </div>
             </CardContent>
           </Card>
@@ -55,10 +80,28 @@ const ProfilePage = () => {
         <motion.div variants={item}>
           <Card>
             <CardContent className="p-4 divide-y divide-border">
-              <SettingRow icon={Moon} label="Tungi rejim" action={<Switch />} />
-              <SettingRow icon={Globe} label="Til" value="O'zbek" />
-              <SettingRow icon={DollarSign} label="Valyuta" value="UZS" />
-              <SettingRow icon={Bell} label="Bildirishnomalar" action={<Switch defaultChecked />} />
+              <SettingRow
+                icon={Moon}
+                label="Tungi rejim"
+                action={
+                  <Switch
+                    checked={isDark}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  />
+                }
+              />
+              <SettingRow icon={Globe} label="Til" value={`${currentLang?.flag} ${currentLang?.label}`} onClick={() => setLangOpen(true)} />
+              <SettingRow icon={DollarSign} label="Valyuta" value={currentCurr?.code} onClick={() => setCurrOpen(true)} />
+              <SettingRow
+                icon={Bell}
+                label="Bildirishnomalar"
+                action={
+                  <Switch
+                    checked={notifications}
+                    onCheckedChange={setNotifications}
+                  />
+                }
+              />
             </CardContent>
           </Card>
         </motion.div>
@@ -67,9 +110,9 @@ const ProfilePage = () => {
         <motion.div variants={item}>
           <Card>
             <CardContent className="p-4 divide-y divide-border">
-              <SettingRow icon={Download} label="Ma'lumotlarni eksport" action={<ChevronRight size={16} className="text-muted-foreground" />} />
-              <SettingRow icon={Upload} label="Ma'lumotlarni import" action={<ChevronRight size={16} className="text-muted-foreground" />} />
-              <SettingRow icon={Trash2} label="Ma'lumotlarni tozalash" action={<ChevronRight size={16} className="text-destructive" />} />
+              <SettingRow icon={Download} label="Ma'lumotlarni eksport" onClick={() => toast.success("Ma'lumotlar eksport qilindi!")} action={<ChevronRight size={16} className="text-muted-foreground" />} />
+              <SettingRow icon={Upload} label="Ma'lumotlarni import" onClick={() => toast.info('Import tez kunda!')} action={<ChevronRight size={16} className="text-muted-foreground" />} />
+              <SettingRow icon={Trash2} label="Ma'lumotlarni tozalash" onClick={() => toast.warning("Ma'lumotlar tozalandi (demo)")} action={<ChevronRight size={16} className="text-destructive" />} />
             </CardContent>
           </Card>
         </motion.div>
@@ -79,20 +122,58 @@ const ProfilePage = () => {
           <Card>
             <CardContent className="p-4 divide-y divide-border">
               <SettingRow icon={Info} label="Versiya" value="1.0.0" />
-              <SettingRow icon={Shield} label="Maxfiylik siyosati" action={<ChevronRight size={16} className="text-muted-foreground" />} />
-              <SettingRow icon={HelpCircle} label="Yordam" action={<ChevronRight size={16} className="text-muted-foreground" />} />
+              <SettingRow icon={Shield} label="Maxfiylik siyosati" onClick={() => toast.info('Maxfiylik siyosati sahifasi tez kunda!')} action={<ChevronRight size={16} className="text-muted-foreground" />} />
+              <SettingRow icon={HelpCircle} label="Yordam" onClick={() => toast.info('Yordam sahifasi tez kunda!')} action={<ChevronRight size={16} className="text-muted-foreground" />} />
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Logout */}
         <motion.div variants={item}>
-          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10">
+          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => toast.info('Chiqish tez kunda!')}>
             <LogOut size={18} className="mr-2" />
             Chiqish
           </Button>
         </motion.div>
       </motion.div>
+
+      {/* Language Dialog */}
+      <Dialog open={langOpen} onOpenChange={setLangOpen}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader><DialogTitle>Tilni tanlang</DialogTitle></DialogHeader>
+          <div className="space-y-1">
+            {languages.map(l => (
+              <button
+                key={l.code}
+                onClick={() => { setLanguage(l.code); setLangOpen(false); toast.success(`Til: ${l.label}`); }}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${language === l.code ? 'bg-primary/10 text-primary' : 'hover:bg-accent'}`}
+              >
+                <span className="flex items-center gap-3"><span className="text-xl">{l.flag}</span><span className="font-medium text-sm">{l.label}</span></span>
+                {language === l.code && <Check size={18} />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Currency Dialog */}
+      <Dialog open={currOpen} onOpenChange={setCurrOpen}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader><DialogTitle>Valyutani tanlang</DialogTitle></DialogHeader>
+          <div className="space-y-1">
+            {currencies.map(c => (
+              <button
+                key={c.code}
+                onClick={() => { setCurrency(c.code); setCurrOpen(false); toast.success(`Valyuta: ${c.code}`); }}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${currency === c.code ? 'bg-primary/10 text-primary' : 'hover:bg-accent'}`}
+              >
+                <span className="flex items-center gap-3"><span className="font-bold">{c.symbol}</span><span className="font-medium text-sm">{c.label}</span></span>
+                {currency === c.code && <Check size={18} />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
