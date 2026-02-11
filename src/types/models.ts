@@ -66,3 +66,19 @@ export interface Credit {
   startDate: string;
   description?: string;
 }
+
+export interface MandatoryExpense {
+  id: string;
+  name: string;
+  amount: number;
+  icon: string;
+}
+
+export const DEFAULT_MANDATORY_EXPENSES: Omit<MandatoryExpense, 'id' | 'amount'>[] = [
+  { name: 'Uy ijarasi', icon: '🏠' },
+  { name: 'Kommunal', icon: '💡' },
+  { name: 'Bog\'cha / Maktab', icon: '👶' },
+  { name: 'Internet / Tel', icon: '📱' },
+  { name: 'Sug\'urta', icon: '🛡️' },
+  { name: 'Boshqa majburiy', icon: '📋' },
+];
