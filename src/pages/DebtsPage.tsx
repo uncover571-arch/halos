@@ -1,21 +1,28 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Calendar, Phone, Check, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, Phone, Check, AlertTriangle, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { demoDebts, demoCredits, formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/data/demo-data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Credit } from '@/types/models';
+import { useData } from '@/contexts/DataContext';
 import FreedomPlan from '@/components/FreedomPlan';
+import ProPromoBanner from '@/components/ProPromoBanner';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
-const DebtsPage = () => {
+interface DebtsPageProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
+  const { debts, addDebt, deleteDebt, credits, addCredit, deleteCredit, isPro } = useData();
   const [tab, setTab] = useState<'lent' | 'borrowed' | 'credits'>('credits');
   const [showAdd, setShowAdd] = useState(false);
   const [addMode, setAddMode] = useState<'debt' | 'credit'>('debt');
@@ -37,11 +44,8 @@ const DebtsPage = () => {
   const [creditDesc, setCreditDesc] = useState('');
   const [creditStartDate, setCreditStartDate] = useState('');
 
-  // Credits state
-  const [credits, setCredits] = useState<Credit[]>(demoCredits);
-
-  const lent = demoDebts.filter(d => d.isLent);
-  const borrowed = demoDebts.filter(d => !d.isLent);
+  const lent = debts.filter(d => d.isLent);
+  const borrowed = debts.filter(d => !d.isLent);
 
   const totalLent = lent.filter(d => d.status !== 'paid').reduce((s, d) => s + (d.amount - d.paidAmount), 0);
   const totalBorrowed = borrowed.filter(d => d.status !== 'paid').reduce((s, d) => s + (d.amount - d.paidAmount), 0);
@@ -61,6 +65,18 @@ const DebtsPage = () => {
   const handleSaveDebt = () => {
     if (!personName.trim()) { toast.error('Shaxs ismini kiriting!'); return; }
     if (!debtAmount || Number(debtAmount) <= 0) { toast.error('Summani kiriting!'); return; }
+    addDebt({
+      isLent: debtType === 'lent',
+      personName: personName.trim(),
+      phoneNumber: phoneNumber || undefined,
+      amount: Number(debtAmount),
+      paidAmount: 0,
+      currency: 'UZS',
+      description: debtDesc || undefined,
+      givenDate: new Date().toISOString().split('T')[0],
+      dueDate: dueDate || undefined,
+      status: 'active',
+    });
     toast.success(`Qarz qo'shildi: ${personName} - ${Number(debtAmount).toLocaleString()} UZS`);
     setShowAdd(false);
     resetForm();
@@ -73,8 +89,13 @@ const DebtsPage = () => {
     if (!creditRate || Number(creditRate) <= 0) { toast.error('Yillik foizni kiriting!'); return; }
     if (!creditTerm || Number(creditTerm) <= 0) { toast.error('Muddatni kiriting!'); return; }
 
-    const newCredit: Credit = {
-      id: String(Date.now()),
+    if (!isPro && credits.length >= 1) {
+      toast.error('Bepul rejada faqat 1 ta kredit qo\'shish mumkin. PRO ga o\'ting!');
+      onNavigate?.('pro');
+      return;
+    }
+
+    addCredit({
       bankName: creditBank,
       loanAmount: Number(creditAmount),
       monthlyPayment: Number(creditMonthlyPay),
@@ -82,9 +103,7 @@ const DebtsPage = () => {
       termMonths: Number(creditTerm),
       startDate: creditStartDate || new Date().toISOString().split('T')[0],
       description: creditDesc || undefined,
-    };
-
-    setCredits(prev => [...prev, newCredit]);
+    });
     toast.success(`Kredit qo'shildi: ${creditBank}`);
     setShowAdd(false);
     resetForm();
@@ -131,6 +150,13 @@ const DebtsPage = () => {
         ))}
       </div>
 
+      {/* Pro Banner */}
+      {!isPro && tab === 'credits' && (
+        <div className="mb-4">
+          <ProPromoBanner onNavigatePro={() => onNavigate?.('pro')} message="Cheksiz kredit va to'liq tahlil uchun PRO ga o'ting" />
+        </div>
+      )}
+
       {/* Debts List */}
       {tab !== 'credits' && (
         <>
@@ -140,7 +166,7 @@ const DebtsPage = () => {
               const sc = statusConfig[d.status];
               return (
                 <motion.div key={d.id} variants={item}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card className="hover:shadow-md transition-shadow group">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
@@ -152,7 +178,12 @@ const DebtsPage = () => {
                             {d.phoneNumber && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone size={10} />{d.phoneNumber}</p>}
                           </div>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${sc.color}`}>{sc.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${sc.color}`}>{sc.label}</span>
+                          <button onClick={() => deleteDebt(d.id)} className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                       {d.description && <p className="text-xs text-muted-foreground mb-2">{d.description}</p>}
                       <div className="flex items-center justify-between text-sm mb-1.5">
@@ -182,7 +213,7 @@ const DebtsPage = () => {
         </>
       )}
 
-      {/* Freedom Plan (Credits Tab) */}
+      {/* Freedom Plan */}
       {tab === 'credits' && (
         <FreedomPlan credits={credits} onAddCredit={openAddCredit} />
       )}

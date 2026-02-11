@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, TrendingDown, Clock, Landmark, Plus, Trash2,
@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { formatCurrency } from '@/data/demo-data';
 import { Credit, MandatoryExpense, DEFAULT_MANDATORY_EXPENSES } from '@/types/models';
+import { useData } from '@/contexts/DataContext';
 
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
@@ -68,12 +69,13 @@ interface FreedomPlanProps {
 }
 
 export default function FreedomPlan({ credits, onAddCredit }: FreedomPlanProps) {
+  const { freedomPlan, setFreedomPlan } = useData();
   const [showSetup, setShowSetup] = useState(false);
   const [showResult, setShowResult] = useState(false);
   
-  // User financial data
-  const [monthlyIncome, setMonthlyIncome] = useState('');
-  const [expenses, setExpenses] = useState<MandatoryExpense[]>([]);
+  // User financial data - initialize from saved plan
+  const [monthlyIncome, setMonthlyIncome] = useState(freedomPlan.monthlyIncome > 0 ? String(freedomPlan.monthlyIncome) : '');
+  const [expenses, setExpenses] = useState<MandatoryExpense[]>(freedomPlan.mandatoryExpenses.length > 0 ? freedomPlan.mandatoryExpenses : []);
   const [newExpName, setNewExpName] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
 
@@ -425,7 +427,11 @@ export default function FreedomPlan({ credits, onAddCredit }: FreedomPlanProps) 
             )}
 
             <Button 
-              onClick={() => { setShowSetup(false); setShowResult(true); }} 
+              onClick={() => { 
+                setFreedomPlan({ monthlyIncome: Number(monthlyIncome), mandatoryExpenses: expenses, isSetup: true });
+                setShowSetup(false); 
+                setShowResult(true); 
+              }} 
               disabled={!hasSetup}
               className="w-full h-12 text-base font-semibold gradient-primary border-0 text-white"
             >

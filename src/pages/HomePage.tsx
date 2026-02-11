@@ -1,29 +1,33 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Plus, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Sparkles, Handshake, ArrowLeftRight } from 'lucide-react';
+import { Bell, Plus, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Sparkles, Handshake, ArrowLeftRight, Crown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { demoUser, demoTransactions, formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/data/demo-data';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/models';
 import { AddTransactionSheet } from '@/components/AddTransactionSheet';
+import BudgetTracker from '@/components/BudgetTracker';
+import ProPromoBanner from '@/components/ProPromoBanner';
+import { useData } from '@/contexts/DataContext';
 import { toast } from 'sonner';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 interface HomePageProps {
-  onNavigate?: (tab: 'home' | 'transactions' | 'add' | 'debts' | 'profile') => void;
+  onNavigate?: (tab: string) => void;
 }
 
 const HomePage = ({ onNavigate }: HomePageProps) => {
   const [showAdd, setShowAdd] = useState(false);
   const [addType, setAddType] = useState<'income' | 'expense' | undefined>(undefined);
+  const { transactions, freedomPlan, isPro } = useData();
 
-  const totalIncome = demoTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpense = demoTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpense;
 
-  const recent = demoTransactions.slice(0, 5);
+  const recent = transactions.slice(0, 5);
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const handleQuickAction = (label: string) => {
@@ -40,11 +44,13 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
         <motion.div variants={item} className="flex items-center justify-between">
           <div>
             <p className="text-muted-foreground text-sm">Assalomu alaykum 👋</p>
-            <h1 className="text-xl font-bold">{demoUser.firstName} {demoUser.lastName}</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              Halos
+              {isPro && <span className="text-[10px] px-1.5 py-0.5 rounded-full gradient-purple text-white font-medium">PRO</span>}
+            </h1>
           </div>
           <Button variant="ghost" size="icon" className="relative" onClick={() => toast.info('Bildirishnomalar tez kunda!')}>
             <Bell size={22} />
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-destructive" />
           </Button>
         </motion.div>
 
@@ -70,6 +76,13 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
           </Card>
         </motion.div>
 
+        {/* Budget Tracker (70% rule) */}
+        {freedomPlan.isSetup && (
+          <motion.div variants={item}>
+            <BudgetTracker />
+          </motion.div>
+        )}
+
         {/* Quick Actions */}
         <motion.div variants={item} className="grid grid-cols-4 gap-3">
           {[
@@ -85,28 +98,24 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
           ))}
         </motion.div>
 
-        {/* AI Card */}
-        <motion.div variants={item}>
-          <Card className="border-primary/20 bg-accent">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-purple flex items-center justify-center shrink-0"><Sparkles size={20} className="text-white" /></div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">AI maslahat</p>
-                <p className="text-xs text-muted-foreground">Oziq-ovqat xarajatlaringiz o'tgan oyga nisbatan 15% oshgan 📊</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Pro Banner for free users */}
+        {!isPro && (
+          <motion.div variants={item}>
+            <ProPromoBanner onNavigatePro={() => onNavigate?.('pro')} />
+          </motion.div>
+        )}
 
         {/* Monthly Summary */}
         <motion.div variants={item}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Oylik xulosa</h2>
-            <span className="text-xs text-muted-foreground">Fevral 2026</span>
+            <span className="text-xs text-muted-foreground">
+              {new Date().toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="text-emerald-500" size={20} /><div><p className="text-xs text-muted-foreground">Tejash</p><p className="font-bold text-sm">{formatCurrency(totalIncome - totalExpense)}</p></div></CardContent></Card>
-            <Card><CardContent className="p-4 flex items-center gap-3"><TrendingDown className="text-destructive" size={20} /><div><p className="text-xs text-muted-foreground">Tranzaksiyalar</p><p className="font-bold text-sm">{demoTransactions.length} ta</p></div></CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="text-emerald-500" size={20} /><div><p className="text-xs text-muted-foreground">Tejash</p><p className="font-bold text-sm">{formatCurrency(balance > 0 ? balance : 0)}</p></div></CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center gap-3"><TrendingDown className="text-destructive" size={20} /><div><p className="text-xs text-muted-foreground">Tranzaksiyalar</p><p className="font-bold text-sm">{transactions.length} ta</p></div></CardContent></Card>
           </div>
         </motion.div>
 
@@ -116,25 +125,34 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
             <h2 className="font-semibold">Oxirgi tranzaksiyalar</h2>
             <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => onNavigate?.('transactions')}>Barchasi</Button>
           </div>
-          <div className="space-y-2">
-            {recent.map(t => {
-              const cat = allCategories.find(c => c.name === t.category);
-              return (
-                <Card key={t.id}>
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg bg-muted">{cat?.icon || '📦'}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{t.category}</p>
-                      <p className="text-xs text-muted-foreground truncate">{t.description}</p>
-                    </div>
-                    <p className={`font-bold text-sm whitespace-nowrap ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {recent.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground text-sm">Hali tranzaksiya yo'q</p>
+                <p className="text-xs text-muted-foreground mt-1">+ tugmasini bosib kirim yoki chiqim qo'shing</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {recent.map(t => {
+                const cat = allCategories.find(c => c.name === t.category);
+                return (
+                  <Card key={t.id}>
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg bg-muted">{cat?.icon || '📦'}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{t.category}</p>
+                        <p className="text-xs text-muted-foreground truncate">{t.description}</p>
+                      </div>
+                      <p className={`font-bold text-sm whitespace-nowrap ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </motion.div>
 
