@@ -1,4 +1,4 @@
-import { Transaction, Debt, User } from '@/types/models';
+import { Transaction, Debt, User, Credit } from '@/types/models';
 
 export const demoUser: User = {
   id: '1',
@@ -27,6 +27,11 @@ export const demoDebts: Debt[] = [
   { id: '2', isLent: false, personName: 'Jasur', amount: 500000, paidAmount: 0, currency: 'UZS', description: 'Tushlikka', givenDate: '2026-02-01', dueDate: '2026-02-28', status: 'active' },
   { id: '3', isLent: true, personName: 'Dilshod', amount: 1000000, paidAmount: 1000000, currency: 'UZS', description: 'Kurs uchun', givenDate: '2025-12-01', status: 'paid' },
   { id: '4', isLent: false, personName: 'Shoxrux', phoneNumber: '+998901234567', amount: 2000000, paidAmount: 500000, currency: 'UZS', givenDate: '2025-11-01', dueDate: '2026-01-31', status: 'overdue' },
+];
+
+export const demoCredits: Credit[] = [
+  { id: '1', bankName: 'Ipoteka Bank', loanAmount: 120000000, monthlyPayment: 3200000, annualRate: 24, termMonths: 60, startDate: '2025-06-01', description: 'Avtomobil uchun kredit' },
+  { id: '2', bankName: 'Kapitalbank', loanAmount: 50000000, monthlyPayment: 2100000, annualRate: 28, termMonths: 36, startDate: '2025-09-01', description: 'Noutbuk va jihozlar' },
 ];
 
 export const formatCurrency = (amount: number): string => {

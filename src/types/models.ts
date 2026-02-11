@@ -55,3 +55,14 @@ export const INCOME_CATEGORIES = [
   { name: 'Sovg\'a', icon: '🎁', color: 'hsl(280 80% 60%)' },
   { name: 'Boshqa', icon: '📦', color: 'hsl(230 10% 50%)' },
 ] as const;
+
+export interface Credit {
+  id: string;
+  bankName: string;
+  loanAmount: number;
+  monthlyPayment: number;
+  annualRate: number;
+  termMonths: number;
+  startDate: string;
+  description?: string;
+}
