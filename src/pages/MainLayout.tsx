@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Receipt, Plus, Handshake, User } from 'lucide-react';
+import { Home, Receipt, Plus, Handshake, User, Crown } from 'lucide-react';
 import HomePage from '@/pages/HomePage';
 import TransactionsPage from '@/pages/TransactionsPage';
 import DebtsPage from '@/pages/DebtsPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import ProfilePage from '@/pages/ProfilePage';
+import HalosProPage from '@/pages/HalosProPage';
 import { AddTransactionSheet } from '@/components/AddTransactionSheet';
 
-type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'profile';
+type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'profile' | 'pro';
 
 const tabs = [
   { id: 'home' as Tab, label: 'Asosiy', icon: Home },
@@ -22,14 +23,15 @@ const MainLayout = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showAdd, setShowAdd] = useState(false);
 
-  const navigateTo = (tab: Tab) => setActiveTab(tab);
+  const navigateTo = (tab: string) => setActiveTab(tab as Tab);
 
   const renderPage = () => {
     switch (activeTab) {
       case 'home': return <HomePage onNavigate={navigateTo} />;
       case 'transactions': return <TransactionsPage />;
-      case 'debts': return <DebtsPage />;
-      case 'profile': return <ProfilePage />;
+      case 'debts': return <DebtsPage onNavigate={navigateTo} />;
+      case 'profile': return <ProfilePage onNavigate={navigateTo} />;
+      case 'pro': return <HalosProPage onBack={() => setActiveTab('home')} />;
       default: return <HomePage onNavigate={navigateTo} />;
     }
   };
