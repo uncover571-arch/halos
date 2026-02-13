@@ -52,7 +52,7 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
   const currentCurr = currencies.find(c => c.code === currency);
 
   return (
-    <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
+    <div className="pb-24 md:pb-8 md:pt-20 px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
         {/* Profile Header */}
         <motion.div variants={item} className="flex flex-col items-center text-center">
