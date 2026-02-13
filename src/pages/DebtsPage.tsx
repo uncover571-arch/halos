@@ -116,11 +116,11 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
   };
 
   return (
-    <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
+    <div className="pb-24 md:pb-8 md:pt-20 px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
       <h1 className="text-xl font-bold mb-4">Qarzlar & Kreditlar</h1>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
+      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-5">
         <Card className="border-emerald-200 dark:border-emerald-800">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground">Men bergan</p>
@@ -226,7 +226,7 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
           setAddMode(tab === 'credits' ? 'credit' : 'debt');
           setShowAdd(true);
         }}
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center z-50"
+        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center z-50"
       >
         <Plus size={28} />
       </motion.button>

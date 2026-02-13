@@ -59,8 +59,8 @@ const MainLayout = () => {
       </AnimatePresence>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50">
-        <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-2">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50 md:top-0 md:bottom-auto md:border-t-0 md:border-b">
+        <div className="max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto flex items-center justify-around md:justify-center md:gap-2 h-16 px-2">
           {tabs.map(tab => {
             const isAdd = tab.id === 'add';
             const isActive = activeTab === tab.id;
@@ -71,7 +71,7 @@ const MainLayout = () => {
                   key={tab.id}
                   whileTap={{ scale: 0.85 }}
                   onClick={() => handleTabClick(tab.id)}
-                  className="w-12 h-12 -mt-5 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center"
+                  className="w-12 h-12 -mt-5 md:mt-0 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center"
                 >
                   <Plus size={24} />
                 </motion.button>
