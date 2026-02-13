@@ -38,7 +38,7 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
   };
 
   return (
-    <div className="pb-24 md:pb-8 md:pt-20 px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+    <div className="pb-24 md:pb-8 px-4 md:px-8 pt-4 md:pt-8 max-w-lg md:max-w-none mx-auto md:mx-0">
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
         {/* App Bar */}
         <motion.div variants={item} className="flex items-center justify-between">
@@ -84,7 +84,7 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
         )}
 
         {/* Quick Actions */}
-        <motion.div variants={item} className="grid grid-cols-4 md:grid-cols-4 gap-3">
+        <motion.div variants={item} className="grid grid-cols-4 gap-3 md:gap-4">
           {[
             { label: 'Kirim', icon: ArrowDownLeft, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' },
             { label: 'Chiqim', icon: ArrowUpRight, color: 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400' },
@@ -113,7 +113,7 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
               {new Date().toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}
             </span>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="text-emerald-500" size={20} /><div><p className="text-xs text-muted-foreground">Tejash</p><p className="font-bold text-sm">{formatCurrency(balance > 0 ? balance : 0)}</p></div></CardContent></Card>
             <Card><CardContent className="p-4 flex items-center gap-3"><TrendingDown className="text-destructive" size={20} /><div><p className="text-xs text-muted-foreground">Tranzaksiyalar</p><p className="font-bold text-sm">{transactions.length} ta</p></div></CardContent></Card>
           </div>
@@ -156,11 +156,11 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
         </motion.div>
       </motion.div>
 
-      {/* FAB */}
+      {/* FAB — mobile only */}
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={() => { setAddType(undefined); setShowAdd(true); }}
-        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center z-50"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-2xl gradient-primary text-white shadow-lg flex items-center justify-center z-50 md:hidden"
       >
         <Plus size={28} />
       </motion.button>

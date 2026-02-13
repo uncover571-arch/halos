@@ -30,7 +30,7 @@ const HalosProPage = ({ onBack }: HalosProPageProps) => {
   };
 
   return (
-    <div className="pb-24 md:pb-8 md:pt-20 px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+    <div className="pb-24 md:pb-8 px-4 md:px-8 pt-4 md:pt-8 max-w-lg md:max-w-2xl mx-auto md:mx-0">
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
         {/* Header */}
         <motion.div variants={item} className="flex items-center gap-3">
