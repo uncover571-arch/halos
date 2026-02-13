@@ -1,40 +1,38 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { Transaction, Debt, Credit, MandatoryExpense } from '@/types/models';
-
-interface FreedomPlanData {
-  monthlyIncome: number;
-  mandatoryExpenses: MandatoryExpense[];
-  isSetup: boolean;
-}
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
+import { Transaction, Debt, Credit, FreedomPlan, PlanInput, PlanResult, FinancialProfile } from '@/types/models';
+import { toast } from 'sonner';
 
 interface DataContextType {
-  // Transactions
   transactions: Transaction[];
-  addTransaction: (t: Omit<Transaction, 'id'>) => void;
-  deleteTransaction: (id: string) => void;
-
-  // Debts
   debts: Debt[];
-  addDebt: (d: Omit<Debt, 'id'>) => void;
-  updateDebt: (id: string, updates: Partial<Debt>) => void;
-  deleteDebt: (id: string) => void;
-
-  // Credits
   credits: Credit[];
-  addCredit: (c: Omit<Credit, 'id'>) => void;
-  deleteCredit: (id: string) => void;
-
-  // Freedom Plan
-  freedomPlan: FreedomPlanData;
-  setFreedomPlan: (data: FreedomPlanData) => void;
-
-  // Pro status
+  freedomPlan: FreedomPlan;
+  dataLoading: boolean;
   isPro: boolean;
-  setIsPro: (v: boolean) => void;
-
-  // Budget helpers
-  getCurrentMonthExpenses: () => number;
+  summary: {
+    totalIncome: number;
+    totalExpense: number;
+    balance: number;
+    monthlyIncome: number;
+    monthlyExpense: number;
+  };
+  addTransaction: (t: Omit<Transaction, 'id' | 'date'> & { date?: string }) => Promise<void>;
+  updateTransaction: (id: string | number, t: Partial<Transaction>) => Promise<void>;
+  deleteTransaction: (id: string | number) => Promise<void>;
+  addDebt: (d: Omit<Debt, 'id' | 'paidAmount' | 'status' | 'currency'>) => Promise<void>;
+  updateDebt: (id: string | number, d: Partial<Debt>) => Promise<void>;
+  deleteDebt: (id: string | number) => Promise<void>;
+  addCredit: (c: Omit<Credit, 'id'>) => Promise<void>;
+  deleteCredit: (id: string) => Promise<void>;
+  setFreedomPlan: (plan: FreedomPlan) => Promise<void>;
+  // New Backend API Plan
+  financialPlan: { profile: FinancialProfile | null; result: PlanResult | null };
+  saveFinancialPlan: (input: PlanInput) => Promise<void>;
+  refreshData: () => Promise<void>;
   getLivingBudget: () => number;
+  getCurrentMonthExpenses: () => number;
   getRemainingBudget: () => number;
 }
 
@@ -46,71 +44,445 @@ export const useData = () => {
   return ctx;
 };
 
-function loadJSON<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch { return fallback; }
-}
-
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => loadJSON('halos-transactions', []));
-  const [debts, setDebts] = useState<Debt[]>(() => loadJSON('halos-debts', []));
-  const [credits, setCredits] = useState<Credit[]>(() => loadJSON('halos-credits', []));
-  const [freedomPlan, setFreedomPlanState] = useState<FreedomPlanData>(() => loadJSON('halos-freedom-plan', { monthlyIncome: 0, mandatoryExpenses: [], isSetup: false }));
-  const [isPro, setIsProState] = useState(() => loadJSON('halos-is-pro', false));
+  // ... existing state ...
+  const { user } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [credits, setCredits] = useState<Credit[]>([]);
+  const [isPro, setIsPro] = useState(false);
+  const [freedomPlan, setFreedomPlanState] = useState<FreedomPlan>({
+    monthlyIncome: 0,
+    mandatoryExpenses: [],
+    isSetup: false,
+  });
 
-  // Persist
-  useEffect(() => { localStorage.setItem('halos-transactions', JSON.stringify(transactions)); }, [transactions]);
-  useEffect(() => { localStorage.setItem('halos-debts', JSON.stringify(debts)); }, [debts]);
-  useEffect(() => { localStorage.setItem('halos-credits', JSON.stringify(credits)); }, [credits]);
-  useEffect(() => { localStorage.setItem('halos-freedom-plan', JSON.stringify(freedomPlan)); }, [freedomPlan]);
-  useEffect(() => { localStorage.setItem('halos-is-pro', JSON.stringify(isPro)); }, [isPro]);
+  const [summary, setSummary] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    balance: 0,
+    monthlyIncome: 0,
+    monthlyExpense: 0
+  });
 
-  const addTransaction = (t: Omit<Transaction, 'id'>) => {
-    setTransactions(prev => [{ ...t, id: crypto.randomUUID() }, ...prev]);
+  const [financialPlan, setFinancialPlan] = useState<{ profile: FinancialProfile | null; result: PlanResult | null }>({
+    profile: null,
+    result: null
+  });
+
+  // ... (API URL setup) ...
+  const AUTH_API_URL_RAW = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = AUTH_API_URL_RAW.endsWith('/auth')
+    ? AUTH_API_URL_RAW.slice(0, -5)
+    : AUTH_API_URL_RAW;
+
+  const AUTH_API_URL = API_BASE_URL;
+
+  const getTelegramId = () => {
+    return user?.user_metadata?.telegram_id;
   };
-  const deleteTransaction = (id: string) => setTransactions(prev => prev.filter(t => t.id !== id));
 
-  const addDebt = (d: Omit<Debt, 'id'>) => setDebts(prev => [{ ...d, id: crypto.randomUUID() }, ...prev]);
-  const updateDebt = (id: string, updates: Partial<Debt>) => setDebts(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
-  const deleteDebt = (id: string) => setDebts(prev => prev.filter(d => d.id !== id));
+  // ... (loadAll function) ... 
 
-  const addCredit = (c: Omit<Credit, 'id'>) => setCredits(prev => [{ ...c, id: crypto.randomUUID() }, ...prev]);
-  const deleteCredit = (id: string) => setCredits(prev => prev.filter(c => c.id !== id));
-
-  const setFreedomPlan = (data: FreedomPlanData) => setFreedomPlanState(data);
-  const setIsPro = (v: boolean) => setIsProState(v);
-
-  const getCurrentMonthExpenses = useCallback(() => {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-    return transactions
-      .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === month && new Date(t.date).getFullYear() === year)
-      .reduce((s, t) => s + t.amount, 0);
-  }, [transactions]);
-
-  const getLivingBudget = useCallback(() => {
-    if (!freedomPlan.isSetup || freedomPlan.monthlyIncome <= 0) return 0;
+  // Helper calculations
+  const getLivingBudget = () => {
+    if (!freedomPlan.isSetup) return 0;
+    // 70% of income minus mandatory expenses? 
+    // Logic from FreedomPlan.tsx: 
+    // remaining = income - mandatory
+    // living = remaining * 0.7
     const totalMandatory = freedomPlan.mandatoryExpenses.reduce((s, e) => s + e.amount, 0);
-    const totalCreditPayments = credits.reduce((s, c) => s + c.monthlyPayment, 0);
-    const remaining = freedomPlan.monthlyIncome - totalMandatory - totalCreditPayments;
-    return Math.max(0, Math.round(remaining * 0.70));
-  }, [freedomPlan, credits]);
+    // Note: credits are separate in FreedomPlan.tsx, here we might need to fetch them or pass them.
+    // For simplicity, let's assume mandatoryExpenses includes everything or use simplified logic for now.
+    // Actually, let's follow FreedomPlan logic:
+    // We don't have credits inside freedomPlan state here easily without recalculating.
+    // But we have `credits` state.
+    const totalCredits = credits.reduce((s, c) => s + c.monthlyPayment, 0);
+    const remaining = freedomPlan.monthlyIncome - (totalMandatory + totalCredits);
+    return Math.max(0, Math.round(remaining * 0.7));
+  };
 
-  const getRemainingBudget = useCallback(() => {
+  const getCurrentMonthExpenses = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return transactions
+      .filter(t => t.type === 'expense')
+      .filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((s, t) => s + t.amount, 0);
+  };
+
+  const getRemainingBudget = () => {
     return getLivingBudget() - getCurrentMonthExpenses();
-  }, [getLivingBudget, getCurrentMonthExpenses]);
+  };
+
+  // ... (useEffect and API functions) ...
+  // Inside DataContext.Provider value:
+  /*
+      financialPlan, saveFinancialPlan,
+      getLivingBudget, getCurrentMonthExpenses, getRemainingBudget
+  */
+
+
+  const loadAll = async () => {
+    if (!user) {
+      console.log('[DataContext] No user, resetting data');
+      setTransactions([]);
+      setDebts([]);
+      setSummary({ totalIncome: 0, totalExpense: 0, balance: 0, monthlyIncome: 0, monthlyExpense: 0 });
+      setDataLoading(false);
+      return;
+    }
+
+    setDataLoading(true);
+    try {
+      const telegramId = getTelegramId();
+      console.log('[DataContext] Loading data for user:', {
+        userId: user.id,
+        telegramId,
+        user_metadata: user.user_metadata,
+        AUTH_API_URL
+      });
+
+      if (telegramId && AUTH_API_URL) {
+        try {
+          // 0. Load User Profile (Check PRO)
+          const profileUrl = `${AUTH_API_URL}/user/profile?telegram_id=${telegramId}`;
+          const profileRes = await fetch(profileUrl);
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            if (profileData.user) {
+              setIsPro(profileData.user.is_premium || false);
+            }
+          }
+
+          // 1. Transactions (Latest 100)
+          const txUrl = `${AUTH_API_URL}/transactions?telegram_id=${telegramId}&limit=100`;
+          const txRes = await fetch(txUrl);
+          if (txRes.ok) {
+            const txData = await txRes.json();
+            const txArray = Array.isArray(txData) ? txData : (txData.transactions || []);
+            const mappedTxs = txArray.map((tx: any) => ({
+              id: tx.id,
+              type: tx.type,
+              amount: tx.amount,
+              category: tx.category,
+              description: tx.description,
+              date: tx.date || tx.created_at,
+              source: tx.source || 'bot'
+            }));
+            setTransactions(mappedTxs);
+          }
+
+          // 2. Summary (All time & this month)
+          const summaryAllUrl = `${AUTH_API_URL}/transactions/summary?telegram_id=${telegramId}&period=all`;
+          const summaryMonthUrl = `${AUTH_API_URL}/transactions/summary?telegram_id=${telegramId}&period=month`;
+          const [summaryAllRes, summaryMonthRes] = await Promise.all([
+            fetch(summaryAllUrl),
+            fetch(summaryMonthUrl)
+          ]);
+
+          const newSummary = { totalIncome: 0, totalExpense: 0, balance: 0, monthlyIncome: 0, monthlyExpense: 0 };
+
+          if (summaryAllRes.ok) {
+            const allData = await summaryAllRes.json();
+            newSummary.totalIncome = allData.total_income || 0;
+            newSummary.totalExpense = allData.total_expense || 0;
+            newSummary.balance = (allData.total_income || 0) - (allData.total_expense || 0);
+          }
+
+          if (summaryMonthRes.ok) {
+            const monthData = await summaryMonthRes.json();
+            newSummary.monthlyIncome = monthData.total_income || 0;
+            newSummary.monthlyExpense = monthData.total_expense || 0;
+          }
+          setSummary(newSummary);
+
+          // 3. Debts
+          const debtsUrl = `${AUTH_API_URL}/debts?telegram_id=${telegramId}`;
+          const debtsRes = await fetch(debtsUrl);
+          if (debtsRes.ok) {
+            const debtsData = await debtsRes.json();
+            const debtsArray = Array.isArray(debtsData) ? debtsData : (debtsData.debts || []);
+            const mappedDebts = debtsArray.map((d: any) => ({
+              id: d.id,
+              isLent: d.is_lent,
+              personName: d.person_name,
+              phoneNumber: d.phone_number,
+              amount: d.amount,
+              paidAmount: d.paid_amount,
+              currency: d.currency,
+              description: d.description,
+              givenDate: d.given_date,
+              dueDate: d.due_date,
+              status: d.status
+            }));
+            setDebts(mappedDebts);
+          }
+
+          // 4. Financial Plan
+          const planUrl = `${AUTH_API_URL}/plan/current?telegram_id=${telegramId}`;
+          const planRes = await fetch(planUrl);
+          if (planRes.ok) {
+            const planData = await planRes.json();
+            setFinancialPlan({
+              profile: planData.profile,
+              result: planData.result
+            });
+          }
+
+        } catch (e) {
+          console.error('[DataContext] Auth API Load Error:', e);
+          toast.error("Ma'lumotlarni yuklashda xatolik (API)");
+        }
+      } else {
+        console.warn('[DataContext] No telegram ID or AUTH_API_URL!');
+        setTransactions([]);
+        setDebts([]);
+      }
+
+      // 5. Load Credits from Supabase (App specific)
+      const { data: creditsData } = await supabase
+        .from('credits')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (creditsData) {
+        setCredits(creditsData.map((c: any) => ({
+          id: c.id,
+          bankName: c.bank_name,
+          loanAmount: c.loan_amount,
+          monthlyPayment: c.monthly_payment,
+          annualRate: c.annual_rate,
+          termMonths: c.term_months,
+          startDate: c.start_date,
+          description: c.description
+        })));
+      }
+
+      // 6. Load Freedom Plan from Supabase (Legacy)
+      const { data: fpData } = await supabase
+        .from('freedom_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fpData) {
+        setFreedomPlanState({
+          monthlyIncome: fpData.monthly_income,
+          mandatoryExpenses: typeof fpData.mandatory_expenses === 'string'
+            ? JSON.parse(fpData.mandatory_expenses)
+            : fpData.mandatory_expenses,
+          isSetup: fpData.is_setup
+        });
+      }
+
+    } catch (err) {
+      console.error('Error loading data:', err);
+      toast.error('Ma\'lumotlarni yuklashda xatolik yuz berdi');
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAll();
+  }, [user]);
+
+  const refreshData = async () => {
+    await loadAll();
+  };
+
+  // --- Transactions ---
+  const addTransaction = async (t: Omit<Transaction, 'id' | 'date'> & { date?: string }) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        const payload = {
+          type: t.type,
+          amount: t.amount,
+          category: t.category,
+          description: t.description,
+          date: t.date || new Date().toISOString(),
+          telegram_id: telegramId,
+          source: 'app'
+        };
+        const res = await fetch(`${AUTH_API_URL}/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('API Error');
+        await refreshData();
+        toast.success("Tranzaksiya qo'shildi");
+      } else {
+        toast.error("Telegram bilan ulanmagan!");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Xatolik yuz berdi");
+    }
+  };
+
+  const updateTransaction = async (id: string | number, t: Partial<Transaction>) => {
+    toast.info("Tahrirlash hozircha mavjud emas");
+  };
+
+  const deleteTransaction = async (id: string | number) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        await fetch(`${AUTH_API_URL}/transactions/${id}?telegram_id=${telegramId}`, { method: 'DELETE' });
+        await refreshData();
+        toast.success("O'chirildi");
+      }
+    } catch (e) {
+      toast.error("O'chirishda xatolik");
+    }
+  };
+
+  // --- Debts ---
+  const addDebt = async (d: Omit<Debt, 'id' | 'paidAmount' | 'status' | 'currency'>) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        const payload = {
+          telegram_id: telegramId,
+          is_lent: d.isLent,
+          person_name: d.personName,
+          amount: d.amount,
+          phone_number: d.phoneNumber,
+          description: d.description,
+          given_date: d.givenDate,
+          due_date: d.dueDate
+        };
+        const res = await fetch(`${AUTH_API_URL}/debts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('API Error');
+        await refreshData();
+        toast.success("Qarz qo'shildi");
+      }
+    } catch (e) {
+      toast.error("Xatolik yuz berdi");
+    }
+  };
+
+  const updateDebt = async (id: string | number, d: Partial<Debt>) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        const payload: any = { telegram_id: telegramId };
+        if (d.amount) payload.amount = d.amount;
+        if (d.personName) payload.person_name = d.personName;
+        await fetch(`${AUTH_API_URL}/debts/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        await refreshData();
+        toast.success("Yangilandi");
+      }
+    } catch (e) {
+      toast.error("Xatolik");
+    }
+  };
+
+  const deleteDebt = async (id: string | number) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        await fetch(`${AUTH_API_URL}/debts/${id}?telegram_id=${telegramId}`, { method: 'DELETE' });
+        await refreshData();
+        toast.success("O'chirildi");
+      }
+    } catch (e) { toast.error("Xatolik"); }
+  };
+
+  // --- Credits (Supabase) ---
+  const addCredit = async (c: Omit<Credit, 'id'>) => {
+    if (!user) return;
+    const { error } = await supabase.from('credits').insert({
+      user_id: user.id,
+      bank_name: c.bankName,
+      loan_amount: c.loanAmount,
+      monthly_payment: c.monthlyPayment,
+      annual_rate: c.annualRate,
+      term_months: c.termMonths,
+      start_date: c.startDate,
+      description: c.description
+    });
+    if (error) { toast.error(error.message); return; }
+    await refreshData();
+    toast.success("Kredit qo'shildi");
+  };
+
+  const deleteCredit = async (id: string) => {
+    await supabase.from('credits').delete().eq('id', id);
+    await refreshData();
+    toast.success("O'chirildi");
+  };
+
+  // --- Freedom Plan ---
+  const setFreedomPlan = async (plan: FreedomPlan) => {
+    if (!user) return;
+    const { error } = await supabase.from('freedom_plans').upsert({
+      user_id: user.id,
+      monthly_income: plan.monthlyIncome,
+      mandatory_expenses: plan.mandatoryExpenses,
+      is_setup: plan.isSetup,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    if (error) toast.error("Xatolik (Plan)");
+    else {
+      setFreedomPlanState(plan);
+      toast.success("Reja saqlandi");
+    }
+  };
+
+  const saveFinancialPlan = async (input: PlanInput) => {
+    try {
+      const telegramId = getTelegramId();
+      if (telegramId && AUTH_API_URL) {
+        const res = await fetch(`${AUTH_API_URL}/plan/calculate?telegram_id=${telegramId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input)
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setFinancialPlan(prev => ({ ...prev, result }));
+          await refreshData();
+          toast.success("Reja hisoblandi va saqlandi");
+        } else {
+          toast.error("Hisoblashda xatolik");
+        }
+      } else {
+        toast.error("Telegramga ulanmagan");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Xatolik yuz berdi");
+    }
+  };
 
   return (
     <DataContext.Provider value={{
-      transactions, addTransaction, deleteTransaction,
-      debts, addDebt, updateDebt, deleteDebt,
-      credits, addCredit, deleteCredit,
-      freedomPlan, setFreedomPlan,
-      isPro, setIsPro,
-      getCurrentMonthExpenses, getLivingBudget, getRemainingBudget,
+      transactions, debts, credits, freedomPlan, dataLoading, summary, isPro,
+      addTransaction, updateTransaction, deleteTransaction,
+      addDebt, updateDebt, deleteDebt,
+      addCredit, deleteCredit,
+      setFreedomPlan, refreshData,
+      financialPlan, saveFinancialPlan,
+      getLivingBudget, getCurrentMonthExpenses, getRemainingBudget
     }}>
       {children}
     </DataContext.Provider>

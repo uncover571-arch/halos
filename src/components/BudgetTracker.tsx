@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, TrendingDown, Wallet } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useData } from '@/contexts/DataContext';
-import { formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/lib/utils';
 
 export default function BudgetTracker() {
   const { freedomPlan, getLivingBudget, getCurrentMonthExpenses, getRemainingBudget } = useData();
@@ -50,9 +50,8 @@ export default function BudgetTracker() {
           <Progress value={percent} className={`h-2.5 ${isOver ? '[&>div]:bg-destructive' : isWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-emerald-500'}`} />
 
           {/* Status message */}
-          <div className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${
-            isOver ? 'bg-destructive/10 text-destructive' : isWarning ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-          }`}>
+          <div className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${isOver ? 'bg-destructive/10 text-destructive' : isWarning ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+            }`}>
             {isOver ? (
               <><AlertTriangle size={14} /><span><strong>Byudjet oshib ketdi!</strong> Harajatlaringizni kamaytiring.</span></>
             ) : isWarning ? (

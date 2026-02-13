@@ -29,11 +29,11 @@ export const AddTransactionSheet = ({ open, onOpenChange, defaultType }: Props) 
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!amount || Number(amount) <= 0) { toast.error('Summani kiriting!'); return; }
     if (!category) { toast.error('Kategoriya tanlang!'); return; }
 
-    addTransaction({
+    await addTransaction({
       type,
       amount: Number(amount),
       category,

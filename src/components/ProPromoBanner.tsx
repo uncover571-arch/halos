@@ -21,7 +21,7 @@ export default function ProPromoBanner({ onNavigatePro, message }: ProPromoBanne
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">Halos PRO</p>
-            <p className="text-xs text-muted-foreground truncate">{message || "70/20/10 rejasi bilan qarzdan tezroq chiqing!"}</p>
+            <p className="text-xs text-muted-foreground truncate">{message || "Erkinlik Strategiyasi bilan qarzdan tezroq chiqing!"}</p>
           </div>
           <ChevronRight size={16} className="text-muted-foreground shrink-0" />
         </CardContent>

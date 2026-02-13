@@ -1,7 +1,7 @@
 export type TransactionType = 'income' | 'expense';
 
 export interface Transaction {
-  id: string;
+  id: string | number;
   type: TransactionType;
   amount: number;
   category: string;
@@ -13,10 +13,10 @@ export interface Transaction {
 export type DebtStatus = 'active' | 'paid' | 'overdue';
 
 export interface Debt {
-  id: string;
+  id: string | number;
   isLent: boolean;
   personName: string;
-  phoneNumber?: string;
+  phoneNumber?: string | null;
   amount: number;
   paidAmount: number;
   currency: string;
@@ -72,6 +72,65 @@ export interface MandatoryExpense {
   name: string;
   amount: number;
   icon: string;
+}
+
+// Backend API compatible types
+export interface PlanInput {
+  income_self: number;
+  income_partner: number;
+  rent: number;
+  kindergarten: number;
+  utilities: number;
+  loan_payment: number;
+  total_debt: number;
+}
+
+export interface FinancialProfile {
+  id: number;
+  user_id: number;
+  income_self: number;
+  income_partner: number;
+  rent: number;
+  kindergarten: number;
+  utilities: number;
+  loan_payment: number;
+  total_debt: number;
+  updated_at: string;
+}
+
+export interface PlanResult {
+  mode: 'debt' | 'wealth' | 'negative';
+  total_income: number;
+  mandatory_living: number;
+  mandatory_debt: number;
+  free_cash: number;
+
+  // Recommendations
+  monthly_savings: number;
+  monthly_debt_payment: number;
+  monthly_invest: number;
+  monthly_living_extra: number;
+
+  // Projections
+  exit_months: number;
+  exit_date: string | null; // "YYYY-MM"
+  simple_exit_months?: number;
+  simple_exit_date?: string | null;
+  months_saved?: number;
+
+  savings_12_months: number;
+  savings_at_exit: number;
+  invest_12_months?: number;
+  total_12_months?: number;
+}
+
+// Legacy FreedomPlan (can be removed later if not needed)
+export interface FreedomPlan {
+  monthlyIncome: number;
+  mandatoryExpenses: MandatoryExpense[];
+  isSetup: boolean;
+  result?: PlanResult;
+  profile?: FinancialProfile;
 }
 
 export const DEFAULT_MANDATORY_EXPENSES: Omit<MandatoryExpense, 'id' | 'amount'>[] = [

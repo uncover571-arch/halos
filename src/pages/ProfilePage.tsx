@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Moon, Globe, DollarSign, Bell, Download, Upload, Trash2, Info, Shield, HelpCircle, LogOut, ChevronRight, Check, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -46,6 +47,12 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
   const [currOpen, setCurrOpen] = useState(false);
 
   const { isPro } = useData();
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success('Tizimdan chiqdingiz!');
+  };
 
   const isDark = theme === 'dark';
   const currentLang = languages.find(l => l.code === language);
@@ -58,14 +65,16 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
         <motion.div variants={item} className="flex flex-col items-center text-center">
           <div className="w-20 h-20 rounded-full gradient-primary p-0.5 mb-3">
             <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-2xl font-bold text-primary">
-              H
+              {user?.firstName?.[0]?.toUpperCase() || 'H'}
             </div>
           </div>
           <h2 className="font-bold text-lg flex items-center gap-2">
-            Halos
+            {user?.firstName || 'Halos'}
             {isPro && <span className="text-[10px] px-1.5 py-0.5 rounded-full gradient-purple text-white font-medium">PRO</span>}
           </h2>
-          <p className="text-sm text-muted-foreground">Moliyaviy boshqaruv</p>
+          <p className="text-sm text-muted-foreground">
+            {user?.username ? `@${user.username}` : 'Moliyaviy boshqaruv'}
+          </p>
         </motion.div>
 
         {/* Pro Card */}
@@ -78,7 +87,7 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">Halos PRO ga o'ting</p>
-                  <p className="text-xs text-muted-foreground">70/20/10 rejasi, byudjet nazorati va boshqalar</p>
+                  <p className="text-xs text-muted-foreground">Erkinlik Strategiyasi, byudjet nazorati va boshqalar</p>
                 </div>
                 <ChevronRight size={16} className="text-muted-foreground" />
               </CardContent>
@@ -94,9 +103,13 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
                 <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg">📱</div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">Telegram</p>
-                  <p className="text-xs text-muted-foreground">Ulanmagan</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user?.username ? `@${user.username} — Ulangan ✅` : (user?.firstName ? `${user.firstName} — Ulangan ✅` : 'Ulanmagan')}
+                  </p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => toast.info('Telegram integratsiya tez kunda!')}>Ulash</Button>
+                {!user?.username && !user?.firstName && (
+                  <Button size="sm" variant="outline" onClick={() => toast.info('Telegram integratsiya tez kunda!')}>Ulash</Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -138,7 +151,7 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
             <CardContent className="p-4 divide-y divide-border">
               <SettingRow icon={Download} label="Ma'lumotlarni eksport" onClick={() => toast.success("Ma'lumotlar eksport qilindi!")} action={<ChevronRight size={16} className="text-muted-foreground" />} />
               <SettingRow icon={Upload} label="Ma'lumotlarni import" onClick={() => toast.info('Import tez kunda!')} action={<ChevronRight size={16} className="text-muted-foreground" />} />
-              <SettingRow icon={Trash2} label="Ma'lumotlarni tozalash" onClick={() => toast.warning("Ma'lumotlar tozalandi (demo)")} action={<ChevronRight size={16} className="text-destructive" />} />
+              <SettingRow icon={Trash2} label="Ma'lumotlarni tozalash" onClick={() => toast.info("Bu funksiya tez kunda!")} action={<ChevronRight size={16} className="text-destructive" />} />
             </CardContent>
           </Card>
         </motion.div>
@@ -156,7 +169,7 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
 
         {/* Logout */}
         <motion.div variants={item}>
-          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => toast.info('Chiqish tez kunda!')}>
+          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={handleLogout}>
             <LogOut size={18} className="mr-2" />
             Chiqish
           </Button>

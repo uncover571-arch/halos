@@ -4,7 +4,7 @@ import { Plus, Calendar, Phone, Check, AlertTriangle, Trash2 } from 'lucide-reac
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,10 +62,10 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
     setCreditBank(''); setCreditAmount(''); setCreditMonthlyPay(''); setCreditRate(''); setCreditTerm(''); setCreditDesc(''); setCreditStartDate('');
   };
 
-  const handleSaveDebt = () => {
+  const handleSaveDebt = async () => {
     if (!personName.trim()) { toast.error('Shaxs ismini kiriting!'); return; }
     if (!debtAmount || Number(debtAmount) <= 0) { toast.error('Summani kiriting!'); return; }
-    addDebt({
+    await addDebt({
       isLent: debtType === 'lent',
       personName: personName.trim(),
       phoneNumber: phoneNumber || undefined,
@@ -82,7 +82,7 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
     resetForm();
   };
 
-  const handleSaveCredit = () => {
+  const handleSaveCredit = async () => {
     if (!creditBank.trim()) { toast.error('Bank nomini kiriting!'); return; }
     if (!creditAmount || Number(creditAmount) <= 0) { toast.error('Kredit summasini kiriting!'); return; }
     if (!creditMonthlyPay || Number(creditMonthlyPay) <= 0) { toast.error('Oylik to\'lovni kiriting!'); return; }
@@ -95,7 +95,7 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
       return;
     }
 
-    addCredit({
+    await addCredit({
       bankName: creditBank,
       loanAmount: Number(creditAmount),
       monthlyPayment: Number(creditMonthlyPay),
@@ -145,7 +145,7 @@ const DebtsPage = ({ onNavigate }: DebtsPageProps) => {
       <div className="flex gap-1 p-1 bg-muted rounded-xl mb-5">
         {(['credits', 'lent', 'borrowed'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-all ${tab === t ? 'bg-card shadow text-foreground' : 'text-muted-foreground'}`}>
-            {t === 'lent' ? 'Men bergan' : t === 'borrowed' ? 'Men olgan' : '🛡️ Halos Reja'}
+            {t === 'lent' ? 'Men bergan' : t === 'borrowed' ? 'Men olgan' : '🛡️ Erkinlik Strategiyasi'}
           </button>
         ))}
       </div>

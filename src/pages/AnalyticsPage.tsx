@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/lib/utils';
 import { EXPENSE_CATEGORIES } from '@/types/models';
 import { useData } from '@/contexts/DataContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';

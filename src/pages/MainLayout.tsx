@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Receipt, Plus, Handshake, User, Crown, BarChart3 } from 'lucide-react';
+import { Home, Receipt, Plus, Handshake, User, Crown, BarChart3, Target } from 'lucide-react';
 import HomePage from '@/pages/HomePage';
 import TransactionsPage from '@/pages/TransactionsPage';
 import DebtsPage from '@/pages/DebtsPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import ProfilePage from '@/pages/ProfilePage';
-import HalosProPage from '@/pages/HalosProPage';
+import ProPage from '@/pages/ProPage';
+import FreedomPlanPage from '@/pages/FreedomPlanPage';
 import { AddTransactionSheet } from '@/components/AddTransactionSheet';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 
-type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'analytics' | 'profile' | 'pro';
+type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'analytics' | 'profile' | 'pro' | 'plan';
 
 const navItems = [
   { id: 'home' as Tab, label: 'Asosiy', icon: Home },
+  { id: 'plan' as Tab, label: 'Erkinlik', icon: Target },
   { id: 'transactions' as Tab, label: 'Tranzaksiyalar', icon: Receipt },
   { id: 'analytics' as Tab, label: 'Statistika', icon: BarChart3 },
   { id: 'debts' as Tab, label: 'Qarzlar', icon: Handshake },
@@ -22,7 +25,8 @@ const navItems = [
 
 const mobileNavItems = [
   { id: 'home' as Tab, label: 'Asosiy', icon: Home },
-  { id: 'transactions' as Tab, label: 'Tranzaksiyalar', icon: Receipt },
+  { id: 'plan' as Tab, label: 'Erkinlik', icon: Target },
+  { id: 'transactions' as Tab, label: 'O\'tqazmalar', icon: Receipt },
   { id: 'add' as Tab, label: '', icon: Plus },
   { id: 'debts' as Tab, label: 'Qarzlar', icon: Handshake },
   { id: 'profile' as Tab, label: 'Profil', icon: User },
@@ -32,17 +36,19 @@ const MainLayout = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showAdd, setShowAdd] = useState(false);
   const { isPro } = useData();
+  const { user } = useAuth();
 
   const navigateTo = (tab: string) => setActiveTab(tab as Tab);
 
   const renderPage = () => {
     switch (activeTab) {
       case 'home': return <HomePage onNavigate={navigateTo} />;
+      case 'plan': return <FreedomPlanPage onNavigate={navigateTo} />;
       case 'transactions': return <TransactionsPage />;
       case 'analytics': return <AnalyticsPage />;
       case 'debts': return <DebtsPage onNavigate={navigateTo} />;
       case 'profile': return <ProfilePage onNavigate={navigateTo} />;
-      case 'pro': return <HalosProPage onBack={() => setActiveTab('home')} />;
+      case 'pro': return <ProPage />;
       default: return <HomePage onNavigate={navigateTo} />;
     }
   };
@@ -76,11 +82,10 @@ const MainLayout = () => {
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? 'gradient-primary text-white shadow-md'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
+                  ? 'gradient-primary text-white shadow-md'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
               >
                 <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
                 <span>{item.label}</span>
@@ -111,7 +116,7 @@ const MainLayout = () => {
               <Crown size={18} className="text-primary" />
               <div className="text-left">
                 <p className="text-xs font-semibold">Halos PRO</p>
-                <p className="text-[10px] text-muted-foreground">70/20/10 rejasi</p>
+                <p className="text-[10px] text-muted-foreground">Erkinlik Strategiyasi</p>
               </div>
             </button>
           </div>
@@ -120,6 +125,9 @@ const MainLayout = () => {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border">
           <p className="text-[10px] text-muted-foreground">© 2026 Halos v1.0</p>
+          <p className="text-[9px] text-muted-foreground/50 mt-1 font-mono">
+            ID: {user?.user_metadata?.telegram_id || 'Not Connected'}
+          </p>
         </div>
       </aside>
 

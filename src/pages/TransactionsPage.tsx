@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { formatCurrency } from '@/data/demo-data';
+import { formatCurrency } from '@/lib/utils';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/models';
 import { useData } from '@/contexts/DataContext';
 
