@@ -31,7 +31,7 @@ const TransactionsPage = () => {
   }, {});
 
   return (
-    <div className="pb-24 md:pb-8 md:pt-20 px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+    <div className="pb-24 md:pb-8 px-4 md:px-8 pt-4 md:pt-8 max-w-lg md:max-w-3xl mx-auto md:mx-0">
       <h1 className="text-xl font-bold mb-4">Tranzaksiyalar</h1>
 
       <div className="relative mb-4">
