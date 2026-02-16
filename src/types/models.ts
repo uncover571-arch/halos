@@ -41,11 +41,14 @@ export const EXPENSE_CATEGORIES = [
   { name: 'Oziq-ovqat', icon: '🍕', color: 'hsl(15 80% 55%)' },
   { name: 'Transport', icon: '🚗', color: 'hsl(217 91% 60%)' },
   { name: 'Uy-joy', icon: '🏠', color: 'hsl(142 71% 45%)' },
+  { name: 'Kommunal', icon: '💡', color: 'hsl(199 89% 48%)' },
+  { name: 'Aloqa', icon: '📱', color: 'hsl(180 70% 45%)' },
   { name: 'Kiyim', icon: '👕', color: 'hsl(280 80% 60%)' },
   { name: 'Sog\'liq', icon: '💊', color: 'hsl(0 84% 60%)' },
   { name: 'Ta\'lim', icon: '📚', color: 'hsl(38 92% 50%)' },
   { name: 'Ko\'ngilochar', icon: '🎮', color: 'hsl(239 84% 67%)' },
-  { name: 'Boshqa', icon: '📦', color: 'hsl(230 10% 50%)' },
+  { name: 'Kredit', icon: '💳', color: 'hsl(330 70% 50%)' },
+  { name: 'Boshqa', icon: 'Box', color: 'hsl(230 10% 50%)' },
 ] as const;
 
 export const INCOME_CATEGORIES = [

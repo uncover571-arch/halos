@@ -216,7 +216,7 @@ const ProPage = () => {
 
                             <Button
                                 className="w-full h-12 gradient-primary text-white text-lg rounded-xl shadow-lg shadow-primary/20"
-                                onClick={() => window.open(`https://t.me/HalosBot?start=pro_${selectedPlan}`, '_blank')}
+                                onClick={() => window.open(`https://t.me/HalosRobot?start=pro_${selectedPlan}`, '_blank')}
                             >
                                 Botga o'tish va to'lash
                                 <ArrowRight className="ml-2" size={18} />

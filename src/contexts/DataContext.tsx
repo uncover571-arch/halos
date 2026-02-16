@@ -161,17 +161,35 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             }
           }
 
-          // 1. Transactions (Latest 100)
-          const txUrl = `${AUTH_API_URL}/transactions?telegram_id=${telegramId}&limit=100`;
+          // 1. Transactions (Latest 1000)
+          const txUrl = `${AUTH_API_URL}/transactions?telegram_id=${telegramId}&limit=1000`;
           const txRes = await fetch(txUrl);
           if (txRes.ok) {
             const txData = await txRes.json();
             const txArray = Array.isArray(txData) ? txData : (txData.transactions || []);
+            const categoryMap: Record<string, string> = {
+              'oziq_ovqat': 'Oziq-ovqat',
+              'transport': 'Transport',
+              'uy_joy': 'Uy-joy',
+              'kommunal': 'Kommunal',
+              'sog\'liq': 'Sog\'liq',
+              'kiyim': 'Kiyim',
+              'ta\'lim': 'Ta\'lim',
+              'ko\'ngilochar': 'Ko\'ngilochar',
+              'aloqa': 'Aloqa',
+              'kredit': 'Kredit',
+              'ish_haqi': 'Maosh',
+              'biznes': 'Freelance',
+              'investitsiya': 'Investitsiya',
+              'sovg\'a': 'Sovg\'a',
+              'boshqa': 'Boshqa'
+            };
+
             const mappedTxs = txArray.map((tx: any) => ({
               id: tx.id,
               type: tx.type,
               amount: tx.amount,
-              category: tx.category,
+              category: categoryMap[tx.category] || tx.category,
               description: tx.description,
               date: tx.date || tx.created_at,
               source: tx.source || 'bot'

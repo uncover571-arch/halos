@@ -14,7 +14,8 @@ import {
   EyeOff,
   Wallet,
   PieChart,
-  Target
+  Target,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
         variants={container}
         initial="hidden"
         animate="show"
-        className="px-5 pt-6 max-w-5xl mx-auto space-y-8"
+        className="px-5 pt-2 md:pt-6 max-w-5xl mx-auto space-y-8"
       >
         {/* Header Section */}
         <motion.div variants={item} className="flex items-center justify-between">
@@ -80,7 +81,9 @@ const HomePage = ({ onNavigate }: HomePageProps) => {
                 {user?.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-lg font-bold text-primary">{firstName.charAt(0)}</span>
+                  <div className="w-full h-full gradient-primary flex items-center justify-center text-white">
+                    <Sparkles size={20} fill="currentColor" />
+                  </div>
                 )}
               </div>
             </div>

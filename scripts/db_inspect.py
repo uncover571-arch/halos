@@ -1,7 +1,11 @@
 import asyncio
 import asyncpg
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = "postgresql://postgres.txewsaiagkfkqdrlixxb:NewHalos2026!@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.txewsaiagkfkqdrlixxb:NewHalos2026!@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres")
 
 async def inspect():
     try:

@@ -6,6 +6,7 @@ interface AuthUser extends AppUser {
   user_metadata?: {
     telegram_id?: number;
     username?: string;
+    avatar_url?: string;
   };
 }
 

@@ -1,9 +1,11 @@
 import asyncio
 import asyncpg
 import os
+from dotenv import load_dotenv
 
-# Your provided DATABASE_URL
-DATABASE_URL = "postgresql://postgres.txewsaiagkfkqdrlixxb:NewHalos2026!@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.txewsaiagkfkqdrlixxb:NewHalos2026!@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres")
 
 async def check_db():
     print("Connecting to database...")

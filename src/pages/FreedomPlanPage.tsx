@@ -71,13 +71,13 @@ export default function FreedomPlanPage({ onNavigate }: FreedomPlanPageProps) {
     const result = financialPlan.result;
 
     return (
-        <div className="container mx-auto p-4 max-w-5xl space-y-8 pb-24">
+        <div className="container mx-auto p-4 md:pt-4 pt-1 max-w-5xl space-y-8 pb-24">
             <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                     Moliyaviy Erkinlik Rejasi
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                    Solvo AI tomonidan shaxsiy moliyaviy strukturangiz tahlili va rejalashtirish.
+                    Halos AI tomonidan shaxsiy moliyaviy strukturangiz tahlili va rejalashtirish.
                 </p>
             </div>
 
@@ -217,62 +217,66 @@ export default function FreedomPlanPage({ onNavigate }: FreedomPlanPageProps) {
                             {/* DEBT MODE SPECIFIC */}
                             {result.mode === 'debt' && (
                                 <Card className="relative overflow-hidden">
-                                    {!isPro && result.exit_months > 0 && (
-                                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-center p-6">
-                                            <Lock className="w-12 h-12 text-slate-400 mb-2" />
-                                            <h3 className="text-lg font-bold text-slate-800">To'liq Reja PRO versiyada</h3>
-                                            <p className="text-sm text-slate-600 mb-4 max-w-xs">Tezkor qutulish sanasi va samarali taqsimotni ko'rish uchun PRO obunasini faollashtiring.</p>
-                                            <Button
-                                                variant="default"
-                                                className="text-white bg-gradient-to-r from-indigo-500 to-purple-600"
-                                                onClick={() => onNavigate?.('pro')}
-                                            >
-                                                PRO ga o'tish
-                                            </Button>
-                                        </div>
-                                    )}
-
                                     <CardHeader>
                                         <CardTitle className="text-lg">Qarzdan Qutulish Strategiyasi</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                                <p className="text-sm text-blue-600 font-medium">Oddiy to'lov bilan</p>
+                                                <p className="text-sm text-blue-600 font-medium">Kreditdan qutilish vaqti</p>
                                                 <p className="text-2xl font-bold text-blue-900 mt-1">{result.simple_exit_months || "?"} oy</p>
                                                 <p className="text-xs text-blue-500 mt-1">Sana: {result.simple_exit_date}</p>
                                             </div>
                                             <div className="bg-green-50 p-4 rounded-xl border border-green-100 relative">
-                                                <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">SOLVO TAVSIYASI</div>
+                                                <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">HALOS TAVSIYASI</div>
                                                 <p className="text-sm text-green-600 font-medium">Tezkor Strategiya</p>
                                                 <p className="text-2xl font-bold text-green-900 mt-1">{result.exit_months} oy</p>
                                                 <p className="text-xs text-green-500 mt-1">Sana: {result.exit_date}</p>
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-50 p-4 rounded-xl space-y-3">
-                                            <p className="font-semibold text-sm uppercase text-slate-500 mb-2">Strategik Taqsimot (Solvo Algorithm)</p>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Ozodlik Yo'li (+Tezlatish)</span>
-                                                <span className="font-bold">{formatMoney(result.monthly_debt_payment)}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-500"></div> Hayotiy Farovonlik</span>
-                                                <span className="font-bold">{formatMoney(result.monthly_living_extra)}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div> Shaxsiy Kapital</span>
-                                                <span className="font-bold">{formatMoney(result.monthly_savings)}</span>
-                                            </div>
-                                        </div>
+                                        <div className="relative">
+                                            {!isPro && result.exit_months > 0 && (
+                                                <div className="absolute -inset-2 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-center p-6 rounded-xl border-2 border-dashed border-primary/20">
+                                                    <Lock className="w-8 h-8 text-primary/40 mb-2" />
+                                                    <h3 className="text-sm font-bold text-slate-800">To'liq Reja PRO versiyada</h3>
+                                                    <p className="text-[10px] text-slate-600 mb-3 max-w-[200px]">Optimal taqsimot va batafsil qadamlarni ko'rish uchun PRO-ni faollashtiring.</p>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
+                                                        className="text-xs h-8 gradient-primary text-white"
+                                                        onClick={() => onNavigate?.('pro')}
+                                                    >
+                                                        Upgrade to PRO
+                                                    </Button>
+                                                </div>
+                                            )}
 
-                                        <div className="flex items-center justify-between bg-green-100 p-3 rounded-lg text-green-800 text-sm">
-                                            <span>💵 Qutulganingizda yig'iladigan summa:</span>
-                                            <span className="font-bold">{formatMoney(result.savings_at_exit)}</span>
+                                            <div className="bg-slate-50 p-4 rounded-xl space-y-3">
+                                                <p className="font-semibold text-sm uppercase text-slate-500 mb-2">Strategik Taqsimot (Halos Algoritmi)</p>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Ozodlik Yo'li (+Tezlatish)</span>
+                                                    <span className="font-bold">{formatMoney(result.monthly_debt_payment)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-500"></div> Hayotiy Farovonlik</span>
+                                                    <span className="font-bold">{formatMoney(result.monthly_living_extra)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div> Shaxsiy Kapital</span>
+                                                    <span className="font-bold">{formatMoney(result.monthly_savings)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 flex items-center justify-between bg-green-100 p-3 rounded-lg text-green-800 text-sm">
+                                                <span>💵 Qutulganingizda yig'iladigan summa:</span>
+                                                <span className="font-bold">{formatMoney(result.savings_at_exit)}</span>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
                             )}
+
 
                             {/* WEALTH MODE SPECIFIC */}
                             {result.mode === 'wealth' && (

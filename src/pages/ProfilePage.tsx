@@ -64,8 +64,14 @@ const ProfilePage = ({ onNavigate }: ProfilePageProps) => {
         {/* Profile Header */}
         <motion.div variants={item} className="flex flex-col items-center text-center">
           <div className="w-20 h-20 rounded-full gradient-primary p-0.5 mb-3">
-            <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-2xl font-bold text-primary">
-              {user?.firstName?.[0]?.toUpperCase() || 'H'}
+            <div className="w-full h-full rounded-full bg-card flex items-center justify-center overflow-hidden">
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-2xl font-bold text-primary flex items-center justify-center">
+                  <Sparkles size={32} fill="currentColor" />
+                </div>
+              )}
             </div>
           </div>
           <h2 className="font-bold text-lg flex items-center gap-2">

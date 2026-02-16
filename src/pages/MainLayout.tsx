@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Receipt, Plus, Handshake, User, Crown, BarChart3, Target } from 'lucide-react';
+import { Home, Receipt, Plus, Handshake, User, Crown, BarChart3, Target, Sparkles } from 'lucide-react';
 import HomePage from '@/pages/HomePage';
 import TransactionsPage from '@/pages/TransactionsPage';
 import DebtsPage from '@/pages/DebtsPage';
@@ -11,6 +11,8 @@ import FreedomPlanPage from '@/pages/FreedomPlanPage';
 import { AddTransactionSheet } from '@/components/AddTransactionSheet';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { Sun, Moon } from 'lucide-react';
 
 type Tab = 'home' | 'transactions' | 'add' | 'debts' | 'analytics' | 'profile' | 'pro' | 'plan';
 
@@ -37,6 +39,11 @@ const MainLayout = () => {
   const [showAdd, setShowAdd] = useState(false);
   const { isPro } = useData();
   const { user } = useAuth();
+  const { theme, setTheme } = useAppSettings();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const navigateTo = (tab: string) => setActiveTab(tab as Tab);
 
@@ -65,13 +72,26 @@ const MainLayout = () => {
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar — hidden on mobile */}
       <aside className="hidden md:flex flex-col w-64 lg:w-72 border-r border-border bg-card/50 backdrop-blur-sm fixed inset-y-0 left-0 z-40">
-        {/* Logo */}
-        <div className="p-6 pb-4">
-          <h1 className="text-2xl font-extrabold flex items-center gap-2">
-            <span className="text-gradient-primary">Halos</span>
-            {isPro && <span className="text-[10px] px-1.5 py-0.5 rounded-full gradient-purple text-white font-medium">PRO</span>}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Moliyaviy boshqaruv</p>
+        {/* Logo & Theme Toggle */}
+        <div className="p-6 pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white shadow-lg">
+              <Sparkles size={20} fill="currentColor" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold flex items-center gap-1">
+                <span className="text-gradient-primary">Halos</span>
+                {isPro && <span className="text-[10px] px-1.5 py-0.5 rounded-full gradient-purple text-white font-medium">PRO</span>}
+              </h1>
+              <p className="text-xs text-muted-foreground">Moliyaviy boshqaruv</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:scale-110 active:scale-95 border border-border/40"
+          >
+            {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-600" />}
+          </button>
         </div>
 
         {/* Nav Items */}
@@ -132,7 +152,34 @@ const MainLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 lg:ml-72">
+      <main className="flex-1 md:ml-64 lg:ml-72 relative">
+        {/* Mobile Top Header */}
+        <div className="md:hidden flex items-center justify-between p-4 sticky top-0 bg-background/80 backdrop-blur-md z-40 border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-white">
+              <Sparkles size={16} fill="currentColor" />
+            </div>
+            <h1 className="text-xl font-black text-gradient-primary">Halos</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-xl bg-accent/50 flex items-center justify-center text-muted-foreground transition-all active:scale-90 border border-border/40"
+            >
+              {theme === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
+            </button>
+            <div
+              className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20 cursor-pointer"
+              onClick={() => setActiveTab('profile')}
+            >
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={16} className="text-primary" />
+              )}
+            </div>
+          </div>
+        </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
